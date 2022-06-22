@@ -24,6 +24,8 @@ paths:
           content:
             application/json:
                 schema:
+                  # A JSON pointer that reference a reusable schema
+                  # It is recommended to avoid inline schema definition at operation level
                   $ref: "#/components/schemas/Books"
 
 # Components holds reusable components
@@ -97,9 +99,7 @@ components:
       type: object  
       properties:
         data:
-          # The Schema of the data property
           type: array
-          # The array can contain 0 to a hundred element
           minItems: 0
           maxItems: 100
           items:
