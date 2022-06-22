@@ -27,6 +27,35 @@ paths:
                   # A JSON pointer that reference a reusable schema
                   # It is recommended to avoid inline schema definition at operation level
                   $ref: "#/components/schemas/Books"
+                examples:
+                  # Though tools can generate examples from JSON Schemas, crafting meaningful example is recommended
+                  # It helps to ensure the design is OK and will be helpful for people reading documentation (and mocking tools)
+                  SomeBooks:
+                    summary: A few books found
+                    value:
+                      data:
+                        - id: "9781617295102"
+                          isbn: "9781617295102"
+                          title: "The Design of Web APIs"
+                          price: 
+                            value: 44.99
+                            currency: "USD"
+                          authors:
+                              - id: "12345"
+                                firstName: "Arnaud"
+                                lastName: "Lauret"
+                          stars: 4.4
+                        - id: " 9780137355631"
+                          isbn: " 9780137355631"
+                          title: "Principles of Web API Design"
+                          price: 
+                            value: 44.99
+                            currency: "USD"
+                          authors:
+                              - id: "12346"
+                                firstName: "James"
+                                lastName: "Higginbotham"
+                          stars: 4.7
 
 # Components holds reusable components
 components:
