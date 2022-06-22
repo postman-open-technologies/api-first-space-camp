@@ -170,7 +170,10 @@ components:
         authors:
           $ref: "#/components/schemas/Authors"
         stars:
-          $ref: "#/components/schemas/Stars"
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+          maximum: 5
         publicationDate:
           type: string
           format: date
