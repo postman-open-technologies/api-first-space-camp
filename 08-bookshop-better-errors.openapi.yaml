@@ -74,6 +74,18 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/BookCreate"
+            examples:
+              BookToAdd:
+                  value:
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - "12345"
+                    publicationDate: "2019-11-06"
+                    pages: 392
       responses:
         "201":
           description: Book added
@@ -81,6 +93,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+              examples:
+                BookAdded:
+                  value:
+                    id: "9781617295102"
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - id: "12345"
+                          firstName: "Arnaud"
+                          lastName: "Lauret"
+                    publicationDate: "2019-11-06"
+                    pages: 392
         "400":
           description: Incorrect data provided
           content:
@@ -137,8 +164,7 @@ components:
       items:
         properties:
           id:
-            type: string
-            description: A unique id identifying an author
+            $ref: "#/components/schemas/AuthorId"
           firstName:
             type: string
           middleName:
@@ -149,7 +175,6 @@ components:
           - id
           - firstName
           - lastName
-    # What is returned in list if often a subset of a more complete schema
     BookSummary:
       properties:
         id:
@@ -188,7 +213,6 @@ components:
       type: string
       maxLength: 100
       minLength: 1
-    # The complete schema of the book
     Book:
       properties:
         id:
@@ -222,8 +246,9 @@ components:
         - authors
         - publicationDate
         - pages
-    # A subset of Book
-    # All this could be optimized to avoid duplication errors
+    AuthorId:
+      type: string
+      description: A unique id identifying an author
     BookCreate:
       type: object
       properties:
@@ -253,8 +278,6 @@ components:
         - authors
         - publicationDate
         - pages
-    # Generic error model
-    # Allows to return multiple errors in one shot and help consumer to fix the problems
     Errors:
       required:
         - errors

@@ -70,6 +70,18 @@ paths:
             schema:
               # It is recommended to clearly state what is expected using a subset of the "read" schema
               $ref: "#/components/schemas/BookCreate"
+            examples:
+              BookToAdd:
+                  value:
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - "12345"
+                    publicationDate: "2019-11-06"
+                    pages: 392
       responses:
         # HTTP status code: Not just a 200 OK, but a more precise 201 Created
         "201":
@@ -79,7 +91,21 @@ paths:
               schema:
                 # It is recommended to return the created resource (or at least its idea)
                 $ref: "#/components/schemas/Book"
-
+              examples:
+                BookAdded:
+                  value:
+                    id: "9781617295102"
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - id: "12345"
+                          firstName: "Arnaud"
+                          lastName: "Lauret"
+                    publicationDate: "2019-11-06"
+                    pages: 392
 
 components:
   schemas:
@@ -109,8 +135,7 @@ components:
       items:
         properties:
           id:
-            type: string
-            description: A unique id identifying an author
+            $ref: "#/components/schemas/AuthorId"
           firstName:
             type: string
           middleName:
@@ -194,6 +219,9 @@ components:
         - authors
         - publicationDate
         - pages
+    AuthorId:
+      type: string
+      description: A unique id identifying an author
     # A subset of Book
     # All this could be optimized to avoid duplication errors
     BookCreate:
@@ -207,6 +235,7 @@ components:
           maxLength: 101 # Not the same value as in Book! 
         price:
           $ref: "#/components/schemas/Amount"
+        # authors is an array of id here (but how do consumers know those ids? You can add the missing operation(s))
         authors:
           type: array
           minItems: 1

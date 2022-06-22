@@ -33,8 +33,33 @@ paths:
             application/json:
                 schema:
                   $ref: "#/components/schemas/Books"
-        # Those errors will be present on all operations
-        # Better take advantage of reusable responses       
+                examples:
+                  SomeBooks:
+                    summary: A few books found
+                    value:
+                      data:
+                        - id: "9781617295102"
+                          isbn: "9781617295102"
+                          title: "The Design of Web APIs"
+                          price: 
+                            value: 44.99
+                            currency: "USD"
+                          authors:
+                              - id: "12345"
+                                firstName: "Arnaud"
+                                lastName: "Lauret"
+                          stars: 4.4
+                        - id: " 9780137355631"
+                          isbn: " 9780137355631"
+                          title: "Principles of Web API Design"
+                          price: 
+                            value: 44.99
+                            currency: "USD"
+                          authors:
+                              - id: "12346"
+                                firstName: "James"
+                                lastName: "Higginbotham"
+                          stars: 4.7
         "401":
           $ref: "#/components/responses/AuthenticationError"
         "500":
@@ -47,6 +72,18 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/BookCreate"
+            examples:
+              BookToAdd:
+                  value:
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - "12345"
+                    publicationDate: "2019-11-06"
+                    pages: 392
       responses:
         "201":
           description: Book added
@@ -54,6 +91,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+              examples:
+                # Taking advantage of reusable examples
+                BookAdded:
+                  $ref: "#/components/examples/Book"
         "400":
           description: Incorrect data provided
           content:
@@ -75,8 +116,6 @@ paths:
                         name: authors
                         path: $.authors[0]
                         message: Unknown author id
-        # Those errors will be present on all operations
-        # Better take advantage of reusable responses       
         "401":
           $ref: "#/components/responses/AuthenticationError"
         "500":
@@ -104,6 +143,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+              examples:
+                # Taking advantage of reusable examples
+                Book:
+                  $ref: "#/components/examples/Book"
         "401":
           $ref: "#/components/responses/AuthenticationError"
         # The BookNotFoundError will be useful for the next operation we'll add
@@ -139,8 +182,7 @@ components:
       items:
         properties:
           id:
-            type: string
-            description: A unique id identifying an author
+            $ref: "#/components/schemas/AuthorId"
           firstName:
             type: string
           middleName:
@@ -151,7 +193,6 @@ components:
           - id
           - firstName
           - lastName
-    # What is returned in list if often a subset of a more complete schema
     BookSummary:
       properties:
         id:
@@ -190,7 +231,6 @@ components:
       type: string
       maxLength: 100
       minLength: 1
-    # The complete schema of the book
     Book:
       properties:
         id:
@@ -224,8 +264,9 @@ components:
         - authors
         - publicationDate
         - pages
-    # A subset of Book
-    # All this could be optimized to avoid duplication errors
+    AuthorId:
+      type: string
+      description: A unique id identifying an author
     BookCreate:
       type: object
       properties:
@@ -255,8 +296,6 @@ components:
         - authors
         - publicationDate
         - pages
-    # Generic error model
-    # Allows to return multiple errors in one shot and help consumer to fix the problems
     Errors:
       required:
         - errors
@@ -309,7 +348,6 @@ components:
       required: false
       schema:
         $ref: "#/components/schemas/QueryParameterString"
-  # Responses holds reusable responses
   responses:
     UnexpectedError:
       description: Unexpected error. Consumer may try to send the request again.
@@ -364,3 +402,18 @@ components:
                     location: path
                     name: bookId
                     message: Unknown bookId
+  examples:
+    Book:
+      value:
+        id: "9781617295102"
+        isbn: "9781617295102"
+        title: "The Design of Web APIs"
+        price: 
+          value: 44.99
+          currency: "USD"
+        authors:
+            - id: "12345"
+              firstName: "Arnaud"
+              lastName: "Lauret"
+        publicationDate: "2019-11-06"
+        pages: 392

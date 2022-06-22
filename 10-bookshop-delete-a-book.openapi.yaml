@@ -72,6 +72,18 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/BookCreate"
+            examples:
+              BookToAdd:
+                  value:
+                    isbn: "9781617295102"
+                    title: "The Design of Web APIs"
+                    price: 
+                      value: 44.99
+                      currency: "USD"
+                    authors:
+                        - "12345"
+                    publicationDate: "2019-11-06"
+                    pages: 392
       responses:
         "201":
           description: Book added
@@ -79,6 +91,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+              examples:
+                # Taking advantage of reusable examples
+                BookAdded:
+                  $ref: "#/components/examples/Book"
         "400":
           description: Incorrect data provided
           content:
@@ -122,6 +138,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+              examples:
+                # Taking advantage of reusable examples
+                Book:
+                  $ref: "#/components/examples/Book"
         "401":
           $ref: "#/components/responses/AuthenticationError"
         "404":
@@ -171,8 +191,7 @@ components:
       items:
         properties:
           id:
-            type: string
-            description: A unique id identifying an author
+            $ref: "#/components/schemas/AuthorId"
           firstName:
             type: string
           middleName:
@@ -254,6 +273,9 @@ components:
         - authors
         - publicationDate
         - pages
+    AuthorId:
+      type: string
+      description: A unique id identifying an author
     BookCreate:
       type: object
       properties:
@@ -389,3 +411,18 @@ components:
                     location: path
                     name: bookId
                     message: Unknown bookId
+  examples:
+    Book:
+      value:
+        id: "9781617295102"
+        isbn: "9781617295102"
+        title: "The Design of Web APIs"
+        price: 
+          value: 44.99
+          currency: "USD"
+        authors:
+            - id: "12345"
+              firstName: "Arnaud"
+              lastName: "Lauret"
+        publicationDate: "2019-11-06"
+        pages: 392

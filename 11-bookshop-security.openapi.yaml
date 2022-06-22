@@ -1,4 +1,4 @@
-# Handling errors
+# Adding security information at API and operation levels
 openapi: 3.0.3
 
 info:
@@ -18,6 +18,11 @@ paths:
     get:
       summary: Search books
       operationId: searchBooks
+      # Using a security scheme defined in components.securitySchemes
+      security:
+        - OauthClientCredentials:
+            # This operation requires a token with the scope "read" attached
+            - read
       parameters:
         - name: author
           in: query
@@ -60,9 +65,17 @@ paths:
                                 firstName: "James"
                                 lastName: "Higginbotham"
                           stars: 4.7
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "500":
+          $ref: "#/components/responses/UnexpectedError"
     post:
       summary: Add a book
       operationId: addBook
+      security:
+        - OauthClientCredentials:
+            # This operation requires a token with the scope "administration" attached
+            - administration
       requestBody:
         content:
           application/json:
@@ -88,21 +101,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/Book"
               examples:
+                # Taking advantage of reusable examples
                 BookAdded:
-                  value:
-                    id: "9781617295102"
-                    isbn: "9781617295102"
-                    title: "The Design of Web APIs"
-                    price: 
-                      value: 44.99
-                      currency: "USD"
-                    authors:
-                        - id: "12345"
-                          firstName: "Arnaud"
-                          lastName: "Lauret"
-                    publicationDate: "2019-11-06"
-                    pages: 392
-        # Bad Request: 4xx means it's consumer's fault
+                  $ref: "#/components/examples/Book"
         "400":
           description: Incorrect data provided
           content:
@@ -123,7 +124,70 @@ paths:
                         location: body
                         name: authors
                         path: $.authors[0]
-                        message: Unknown author id        
+                        message: Unknown author id
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        # 403 Forbidden: consumer and or end-user can't do what they requested
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "500":
+          $ref: "#/components/responses/UnexpectedError"
+  /books/{bookId}:
+    parameters:
+      - name: bookId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/BookId"
+        description: Book's [ISBN 13](https://www.isbn-international.org/content/what-isbn) (a standard book identifier)
+    get:
+      summary: Get a book detailed information
+      operationId: readBook
+      # Using a security scheme defined in components.securitySchemes
+      security:
+        - OauthClientCredentials:
+            # This operation requires a token with the scope "read" attached
+            - read
+      responses:
+        "200":
+          description: Book matching the provided `bookId`
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+              examples:
+                # Taking advantage of reusable examples
+                Book:
+                  $ref: "#/components/examples/Book"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        # 403 Forbidden: consumer and or end-user can't do what they requested
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "404":
+          $ref: "#/components/responses/BookNotFoundError"
+        "500":
+          $ref: "#/components/responses/UnexpectedError"
+    delete:
+      summary: Delete a book
+      operationId: deleteBook
+      # Using a security scheme defined in components.securitySchemes
+      security:
+        - OauthClientCredentials:
+            # This operation requires a token with the scope "administration" attached
+            - administration
+      responses:
+        "204":
+          description: Book has been deleted
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        # 403 Forbidden: consumer and or end-user can't do what they requested
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "404":
+          $ref: "#/components/responses/BookNotFoundError"
+        "500":
+          $ref: "#/components/responses/UnexpectedError"
 
 components:
   schemas:
@@ -267,8 +331,6 @@ components:
         - authors
         - publicationDate
         - pages
-    # Generic error model
-    # Allows to return multiple errors in one shot and help consumer to fix the problems
     Errors:
       required:
         - errors
@@ -320,4 +382,109 @@ components:
       description: "Complete or partial title, can be typed phonetically"
       required: false
       schema:
-        $ref: "#/components/schemas/QueryParameterString"    
+        $ref: "#/components/schemas/QueryParameterString"
+  responses:
+    UnexpectedError:
+      description: Unexpected error. Consumer may try to send the request again.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"
+          examples:
+            UnexpectedError:
+              summary: An unexpected error
+              value:
+                errors:
+                  - code: unexpected
+                    message: "An expected error occurred, you may try again later"
+    AuthenticationError:
+      description: "Missing, expired, revoked, or incorrect API token"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"
+          examples:
+            MissingTokenError:
+              summary: No Authorization header
+              description: The header may be missing or its name contains a typo error
+              value:
+                errors:
+                  - code: required
+                    location: header
+                    name: Authorization
+                    message: Missing Authorization header
+            IncorrectTokenError:
+              summary: Incorrect token in Authorization header
+              description: "The token may have expired, been revoked or it contains a typo error"
+              value:
+                errors:
+                  - code: incorrect
+                    location: header
+                    name: Authorization
+                    message: Incorrect Authorization header
+    BookNotFoundError:
+      description: No book found for the provided `bookId`
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"
+          examples:
+            BookNotFoundErrorExample:
+              summary: Incorrect book identifier
+              value:
+                errors:
+                  - code: unknown
+                    location: path
+                    name: bookId
+                    message: Unknown bookId
+    AuthorizationError:
+      description: A scope is missing or end user doesn't have the right privileges
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"
+          # Not that depending on security levels, error message may be less user-friendly
+          examples:
+            # Scopes are linked to consumers
+            MissingScope:
+              summary: Missing scope
+              value:
+                errors:
+                  - code: scope
+                    message: Using this operation requires the "administration" scope
+            # Rights and privileges are usually linked to end-users (but can be consumer application related)
+            # Having the scope adminstration granting the right to delete books does not mean you can delete a specific book
+            MissingRight:
+              summary: Missing right
+              value:
+                errors:
+                  - code: forbidden
+                    location: path
+                    name: bookId
+                    message: Not allowed to delete book 9781617295102
+  examples:
+    Book:
+      value:
+        id: "9781617295102"
+        isbn: "9781617295102"
+        title: "The Design of Web APIs"
+        price: 
+          value: 44.99
+          currency: "USD"
+        authors:
+            - id: "12345"
+              firstName: "Arnaud"
+              lastName: "Lauret"
+        publicationDate: "2019-11-06"
+        pages: 392
+  # SecuritySchemes holds security schemes that can be used in operations
+  securitySchemes:
+    OauthClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: "https://some.url"
+          # Designing scopes is important to partition accesses but keep in mind user-friendliness (consumers and administrators)
+          scopes:
+            read: Grant access to all read operations
+            administration: Grand access to all modification operations
